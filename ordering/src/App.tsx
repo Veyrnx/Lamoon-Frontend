@@ -356,7 +356,7 @@ function App() {
 
       setProducts(liveProducts)
       setCatalogStatus("connected")
-      setCatalogMessage('กรณีต้องการยกเลิกออเดอร์ โปรดติดต่อทางร้าน 02-123-4567')
+      setCatalogMessage('กรณีต้องการยกเลิกออเดอร์ โปรดติดต่อทางร้าน 02-123-4567 เวลาทำการ 09:00 - 20:00 น. ทุกวัน')
 
     }
 
