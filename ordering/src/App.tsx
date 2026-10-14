@@ -480,7 +480,7 @@ function App() {
               onClick={() => goTo("settings")}
             >
               <Icon name="settings" />
-              ตั้งค่า
+              บัญชี
             </Button>
             <Button
               ariaLabel={`ตะกร้าสินค้า ${itemCount} ชิ้น`}
@@ -777,7 +777,7 @@ function App() {
         <MobileNav
           active={activeView === "settings"}
           icon="settings"
-          label="ตั้งค่า"
+          label="บัญชี"
           onClick={() => goTo("settings")}
         />
       </div>
@@ -853,7 +853,7 @@ function App() {
               return
             }
             if (!customerProfile?.phone?.trim() || !customerProfile?.address?.trim()) {
-              window.alert("กรุณากรอกข้อมูลส่วนตัวให้ครบถ้วนในหน้าการตั้งค่า โดยระบุเบอร์โทรศัพท์และที่อยู่สำหรับจัดส่งก่อนสั่งซื้อ")
+              window.alert("กรุณากรอกข้อมูลส่วนตัวให้ครบถ้วนในหน้าบัญชี โดยระบุเบอร์โทรศัพท์และที่อยู่สำหรับจัดส่งก่อนสั่งซื้อ")
               setCheckoutOpen(false)
               setActiveView("settings")
               return
