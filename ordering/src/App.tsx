@@ -1511,6 +1511,9 @@ function OrderCartDrawer({
                 (tubAddOns.find((item) => item.name === name)?.price ?? 0),
               0
             )
+            const tubImage = products.find(
+              (product) => product.name === tubOrder.flavor
+            )?.image
 
             return (
               <div
@@ -1519,7 +1522,17 @@ function OrderCartDrawer({
               >
                 <div className="flex items-start gap-3">
                   <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-[#536348] text-white">
-                    <Icon name="box" />
+                    {tubImage ? (
+                      <img
+                        src={tubImage}
+                        alt={`ไอศกรีมรส${tubOrder.flavor}`}
+                        className="size-10 shrink-0 rounded-xl object-cover"
+                      />
+                    ) : (
+                      <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#536348] text-white">
+                        <Icon name="box" />
+                      </div>
+                    )}
                   </span>
 
                   <div className="min-w-0 flex-1">
