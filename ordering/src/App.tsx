@@ -351,7 +351,7 @@ function App() {
         detail: item.description ?? "ไอศกรีมโฮมเมด",
         price: Number(item.price),
         image: item.image_url || demoProducts[index % demoProducts.length]?.image || "",
-        stock: Math.max(0, Number((Array.isArray(item.product_stock) ? item.product_stock[0]?.quantity : (item.product_stock as {quantity?:number} | null)?.quantity) ?? 0)),
+        stock: Math.max(0, Number((Array.isArray(item.product_stock) ? item.product_stock[0]?.quantity : (item.product_stock as { quantity?: number } | null)?.quantity) ?? 0)),
       }))
 
       setProducts(liveProducts)
@@ -644,11 +644,10 @@ function App() {
                     />
                     {product.tag && (
                       <span
-                        className={`absolute left-4 top-4 rounded-full px-3 py-1.5 text-sm font-bold ${
-                          product.tag === "เหลือน้อย"
-                            ? "bg-[#fff0e7] text-[#a44d34]"
-                            : "bg-[#f8f3e8] text-[#59654e]"
-                        }`}
+                        className={`absolute left-4 top-4 rounded-full px-3 py-1.5 text-sm font-bold ${product.tag === "เหลือน้อย"
+                          ? "bg-[#fff0e7] text-[#a44d34]"
+                          : "bg-[#f8f3e8] text-[#59654e]"
+                          }`}
                       >
                         {product.tag}
                       </span>
@@ -928,11 +927,10 @@ function FestivalSection({
           const selected = selectedPromo === festival.code
           return (
             <article
-              className={`relative overflow-hidden rounded-3xl border p-6 ${festival.theme} ${
-                selected
-                  ? "border-[#536348] ring-2 ring-[#536348]/20"
-                  : "border-[#ded5c7]"
-              }`}
+              className={`relative overflow-hidden rounded-3xl border p-6 ${festival.theme} ${selected
+                ? "border-[#536348] ring-2 ring-[#536348]/20"
+                : "border-[#ded5c7]"
+                }`}
               key={festival.code}
             >
               <span className="absolute -right-8 -top-8 size-28 rounded-full bg-white/35" />
@@ -1139,11 +1137,10 @@ function TubSection({
                   const checked = addOns.includes(item.name)
                   return (
                     <label
-                      className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition ${
-                        checked
-                          ? "border-[#657559] bg-[#edf1e8]"
-                          : "border-[#d8cbb9] bg-white"
-                      }`}
+                      className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition ${checked
+                        ? "border-[#657559] bg-[#edf1e8]"
+                        : "border-[#d8cbb9] bg-white"
+                        }`}
                       key={item.name}
                     >
                       <input
@@ -1416,7 +1413,10 @@ function OrderCartDrawer({
             variant="icon"
             onClick={close}
           >
-            <Icon name="close" />
+            <Icon
+              name="close"
+              className="h-6 w-6 shrink-0 text-[#30382c]"
+            />
           </Button>
         </div>
         <div className="mt-6 flex-1 space-y-4 overflow-auto">
@@ -1503,11 +1503,10 @@ function OrderCartDrawer({
               <div className="mt-3 grid gap-2">
                 {festivals.map((festival) => (
                   <button
-                    className={`flex items-center justify-between rounded-xl border p-3 text-left ${
-                      selectedPromo === festival.code
-                        ? "border-[#536348] bg-[#eef2e9]"
-                        : "border-[#e5dacb]"
-                    }`}
+                    className={`flex items-center justify-between rounded-xl border p-3 text-left ${selectedPromo === festival.code
+                      ? "border-[#536348] bg-[#eef2e9]"
+                      : "border-[#e5dacb]"
+                      }`}
                     key={festival.code}
                     onClick={() => selectPromo(festival.code)}
                   >
@@ -1747,9 +1746,8 @@ function MobileNav({
 }) {
   return (
     <button
-      className={`flex min-w-16 flex-col items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-semibold ${
-        active ? "bg-[#eef1e7] text-[#45523e]" : "text-[#80786d]"
-      }`}
+      className={`flex min-w-16 flex-col items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-semibold ${active ? "bg-[#eef1e7] text-[#45523e]" : "text-[#80786d]"
+        }`}
       onClick={onClick}
     >
       <Icon name={icon} className="size-5" />
@@ -1777,7 +1775,7 @@ function TrackingView({ user, onShop }: { user: AppUser; onShop: () => void }) {
   const [orders, setOrders] = useState<TrackingOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState("")
-  const [alerts, setAlerts] = useState<{id:string;title:string;message:string;is_read:boolean;created_at:string}[]>([])
+  const [alerts, setAlerts] = useState<{ id: string; title: string; message: string; is_read: boolean; created_at: string }[]>([])
   useEffect(() => {
     let alive = true
     async function load() {
@@ -1785,7 +1783,7 @@ function TrackingView({ user, onShop }: { user: AppUser; onShop: () => void }) {
       setLoading(true)
       const { data: customer, error: customerError } = await supabase.from("customers").select("id").eq("profile_id", user.id).maybeSingle()
       if (customerError || !customer) { if (alive) { setMessage("ไม่พบข้อมูลลูกค้าของบัญชีนี้ กรุณาออกจากระบบแล้วเข้าสู่ระบบใหม่"); setLoading(false) }; return }
-      const { data: alertRows } = await supabase.from("customer_notifications").select("id,title,message,is_read,created_at").order("created_at", {ascending:false}).limit(30)
+      const { data: alertRows } = await supabase.from("customer_notifications").select("id,title,message,is_read,created_at").order("created_at", { ascending: false }).limit(30)
       if (alive) setAlerts(alertRows ?? [])
       const { data, error } = await supabase.from("orders").select("id, order_number, status, created_at, delivery_date, delivery_address, subtotal, discount_amount, total_amount, order_items(product_name_snapshot, quantity, line_total, item_options)").eq("customer_id", customer.id).order("created_at", { ascending: false })
       if (alive) { setOrders((data ?? []) as unknown as TrackingOrder[]); setMessage(error ? `โหลดคำสั่งซื้อไม่สำเร็จ: ${error.message}` : ""); setLoading(false) }
@@ -1797,8 +1795,8 @@ function TrackingView({ user, onShop }: { user: AppUser; onShop: () => void }) {
   const labels: Record<string, string> = { pending: "รับคำสั่งซื้อแล้ว", confirmed: "ยืนยันคำสั่งซื้อ", preparing: "กำลังเตรียมไอศกรีม", ready: "พร้อมจัดส่ง", delivered: "จัดส่งสำเร็จ", cancelled: "ยกเลิกคำสั่งซื้อ" }
   return <main className="mx-auto min-h-[75vh] max-w-5xl px-4 py-10 sm:px-6">
     <div className="mb-8"><h1 className="text-2xl font-bold sm:text-3xl">ติดตามการจัดส่ง</h1><p className="mt-2 text-[#756f63]">แสดงคำสั่งซื้อที่ผูกกับบัญชีที่เข้าสู่ระบบเท่านั้น</p></div>
-    {user && alerts.length > 0 && <section className="mb-6 rounded-2xl border border-[#d8cbb9] bg-white p-5"><h2 className="mb-3 text-lg font-bold">แจ้งเตือนการจัดส่ง</h2><div className="space-y-3">{alerts.map(alert => <div key={alert.id} className={`rounded-xl p-3 ${alert.is_read ? "bg-[#f8f5ef]" : "bg-[#e8eddf]"}`}><strong>{alert.title}</strong><p className="mt-1 text-sm">{alert.message}</p><p className="mt-1 text-xs text-[#756f63]">{new Date(alert.created_at).toLocaleString("th-TH")}</p>{!alert.is_read && <button className="mt-2 text-sm underline" onClick={async()=>{const {error}=await supabase.from("customer_notifications").update({is_read:true}).eq("id",alert.id);if(!error)setAlerts(prev=>prev.map(a=>a.id===alert.id?{...a,is_read:true}:a))}}>ทำเครื่องหมายว่าอ่านแล้ว</button>}</div>)}</div></section>}
-    {!user ? <div className="rounded-2xl bg-white p-6">กรุณาเข้าสู่ระบบเพื่อดูคำสั่งซื้อของคุณ</div> : loading ? <p>กำลังโหลดคำสั่งซื้อ…</p> : message ? <p className="rounded-2xl bg-white p-5">{message}</p> : orders.length === 0 ? <div className="rounded-2xl bg-white p-6"><p>ยังไม่มีคำสั่งซื้อในบัญชีนี้</p><Button className="mt-4" onClick={onShop}>เลือกซื้อไอศกรีม</Button></div> : <div className="space-y-5">{orders.map(order => <article key={order.id} className="rounded-3xl border border-[#e7dccb] bg-white p-6 sm:p-8"><div className="flex flex-wrap items-start justify-between gap-3"><div><strong className="text-lg">คำสั่งซื้อ #{order.order_number}</strong><p className="mt-1 text-sm text-[#756f63]">สั่งเมื่อ {new Date(order.created_at).toLocaleString("th-TH")}</p></div><span className="rounded-full bg-[#e8eddf] px-4 py-2 text-sm font-bold">{labels[order.status] ?? order.status}</span></div><div className="mt-5 space-y-3">{(order.order_items ?? []).map((item, i) => <div key={`${order.id}-${i}`} className="flex justify-between gap-3 text-sm"><span>{item.product_name_snapshot} × {item.quantity}{item.item_options?.flavor ? ` (รส${item.item_options.flavor})` : ""}{item.item_options?.add_ons?.length ? ` · เพิ่ม ${item.item_options.add_ons.join(", ")}` : ""}</span><strong>฿{Number(item.line_total).toLocaleString("th-TH")}</strong></div>)}</div><div className="my-4 h-px bg-[#eee4d6]"/><div className="flex justify-between"><span>ยอดรวมที่ชำระ</span><strong>฿{Number(order.total_amount).toLocaleString("th-TH")}</strong></div>{order.delivery_date && <p className="mt-2 text-sm text-[#756f63]">กำหนดจัดส่ง: {new Date(order.delivery_date).toLocaleString("th-TH")}</p>}{order.delivery_address && <p className="mt-2 text-sm text-[#756f63]">ที่อยู่: {order.delivery_address}</p>}</article>)}</div>}
+    {user && alerts.length > 0 && <section className="mb-6 rounded-2xl border border-[#d8cbb9] bg-white p-5"><h2 className="mb-3 text-lg font-bold">แจ้งเตือนการจัดส่ง</h2><div className="space-y-3">{alerts.map(alert => <div key={alert.id} className={`rounded-xl p-3 ${alert.is_read ? "bg-[#f8f5ef]" : "bg-[#e8eddf]"}`}><strong>{alert.title}</strong><p className="mt-1 text-sm">{alert.message}</p><p className="mt-1 text-xs text-[#756f63]">{new Date(alert.created_at).toLocaleString("th-TH")}</p>{!alert.is_read && <button className="mt-2 text-sm underline" onClick={async () => { const { error } = await supabase.from("customer_notifications").update({ is_read: true }).eq("id", alert.id); if (!error) setAlerts(prev => prev.map(a => a.id === alert.id ? { ...a, is_read: true } : a)) }}>ทำเครื่องหมายว่าอ่านแล้ว</button>}</div>)}</div></section>}
+    {!user ? <div className="rounded-2xl bg-white p-6">กรุณาเข้าสู่ระบบเพื่อดูคำสั่งซื้อของคุณ</div> : loading ? <p>กำลังโหลดคำสั่งซื้อ…</p> : message ? <p className="rounded-2xl bg-white p-5">{message}</p> : orders.length === 0 ? <div className="rounded-2xl bg-white p-6"><p>ยังไม่มีคำสั่งซื้อในบัญชีนี้</p><Button className="mt-4" onClick={onShop}>เลือกซื้อไอศกรีม</Button></div> : <div className="space-y-5">{orders.map(order => <article key={order.id} className="rounded-3xl border border-[#e7dccb] bg-white p-6 sm:p-8"><div className="flex flex-wrap items-start justify-between gap-3"><div><strong className="text-lg">คำสั่งซื้อ #{order.order_number}</strong><p className="mt-1 text-sm text-[#756f63]">สั่งเมื่อ {new Date(order.created_at).toLocaleString("th-TH")}</p></div><span className="rounded-full bg-[#e8eddf] px-4 py-2 text-sm font-bold">{labels[order.status] ?? order.status}</span></div><div className="mt-5 space-y-3">{(order.order_items ?? []).map((item, i) => <div key={`${order.id}-${i}`} className="flex justify-between gap-3 text-sm"><span>{item.product_name_snapshot} × {item.quantity}{item.item_options?.flavor ? ` (รส${item.item_options.flavor})` : ""}{item.item_options?.add_ons?.length ? ` · เพิ่ม ${item.item_options.add_ons.join(", ")}` : ""}</span><strong>฿{Number(item.line_total).toLocaleString("th-TH")}</strong></div>)}</div><div className="my-4 h-px bg-[#eee4d6]" /><div className="flex justify-between"><span>ยอดรวมที่ชำระ</span><strong>฿{Number(order.total_amount).toLocaleString("th-TH")}</strong></div>{order.delivery_date && <p className="mt-2 text-sm text-[#756f63]">กำหนดจัดส่ง: {new Date(order.delivery_date).toLocaleString("th-TH")}</p>}{order.delivery_address && <p className="mt-2 text-sm text-[#756f63]">ที่อยู่: {order.delivery_address}</p>}</article>)}</div>}
   </main>
 }
 
@@ -1820,9 +1818,9 @@ function RewardsView({ user, onShop }: { user: AppUser; onShop: () => void }) {
   }, [user])
   const progress = points % 100
   return <main className="mx-auto min-h-[75vh] max-w-5xl px-4 py-10 sm:px-6">
-    <div className="overflow-hidden rounded-[2rem] bg-[#536348] p-7 text-white sm:p-10"><div className="flex flex-col justify-between gap-8 sm:flex-row sm:items-end"><div><span className="text-[#d9e2cf]">แต้มสะสมของคุณ</span><div className="mt-2 flex items-end gap-3"><strong className="text-4xl">{loading ? "…" : points}</strong><span className="pb-2 text-xl">แต้ม</span></div><p className="mt-3 text-[#d9e2cf]">{user ? (points >= 100 ? "คุณมีแต้มเพียงพอสำหรับแลกส่วนลด 50 บาท" : `อีก ${100 - points} แต้ม รับส่วนลด 50 บาท`) : "เข้าสู่ระบบเพื่อดูแต้มสะสมของคุณ"}</p></div><Icon name="star" className="size-16 text-[#d7bc78]"/></div><div className="mt-8 h-3 overflow-hidden rounded-full bg-white/20"><div className="h-full rounded-full bg-[#e9cf8e]" style={{ width: `${progress}%` }}/></div></div>
+    <div className="overflow-hidden rounded-[2rem] bg-[#536348] p-7 text-white sm:p-10"><div className="flex flex-col justify-between gap-8 sm:flex-row sm:items-end"><div><span className="text-[#d9e2cf]">แต้มสะสมของคุณ</span><div className="mt-2 flex items-end gap-3"><strong className="text-4xl">{loading ? "…" : points}</strong><span className="pb-2 text-xl">แต้ม</span></div><p className="mt-3 text-[#d9e2cf]">{user ? (points >= 100 ? "คุณมีแต้มเพียงพอสำหรับแลกส่วนลด 50 บาท" : `อีก ${100 - points} แต้ม รับส่วนลด 50 บาท`) : "เข้าสู่ระบบเพื่อดูแต้มสะสมของคุณ"}</p></div><Icon name="star" className="size-16 text-[#d7bc78]" /></div><div className="mt-8 h-3 overflow-hidden rounded-full bg-white/20"><div className="h-full rounded-full bg-[#e9cf8e]" style={{ width: `${progress}%` }} /></div></div>
     {message && <p className="mt-4 text-sm text-[#a6533c]">{message}</p>}
-    <div className="mt-8 grid gap-5 sm:grid-cols-2"><section className="rounded-3xl border border-[#e7dccb] bg-white p-6"><Icon name="star"/><h2 className="mt-4 text-xl font-bold">วิธีรับแต้ม</h2><p className="mt-2 leading-relaxed text-[#756f63]">ทุกยอดซื้อ 10 บาท รับ 1 แต้ม คำนวณจากยอดสินค้า หลังหักส่วนลด แต้มจะรีเซ็ตทุก 1 ปีนับจากวันสมัครบัญชีและต่อรอบปี</p>{resetAt && <p className="mt-2 text-sm text-[#756f63]">รีเซ็ตแต้มรอบถัดไป: {new Date(resetAt).toLocaleDateString("th-TH")}</p>}</section><section className="rounded-3xl border border-[#e7dccb] bg-white p-6"><Icon name="gift"/><h2 className="mt-4 text-xl font-bold">ใช้แต้มเป็นส่วนลด</h2><p className="mt-2 leading-relaxed text-[#756f63]">สะสมครบ 100 แต้ม แลกรับส่วนลด 50 บาทในขั้นตอนสั่งซื้อ โดยหัก 100 แต้มต่อการแลก 1 ครั้ง</p></section></div><div className="mt-6 text-center"><Button onClick={onShop}>เลือกไอศกรีมเพื่อรับแต้ม</Button></div>
+    <div className="mt-8 grid gap-5 sm:grid-cols-2"><section className="rounded-3xl border border-[#e7dccb] bg-white p-6"><Icon name="star" /><h2 className="mt-4 text-xl font-bold">วิธีรับแต้ม</h2><p className="mt-2 leading-relaxed text-[#756f63]">ทุกยอดซื้อ 10 บาท รับ 1 แต้ม คำนวณจากยอดสินค้า หลังหักส่วนลด แต้มจะรีเซ็ตทุก 1 ปีนับจากวันสมัครบัญชีและต่อรอบปี</p>{resetAt && <p className="mt-2 text-sm text-[#756f63]">รีเซ็ตแต้มรอบถัดไป: {new Date(resetAt).toLocaleDateString("th-TH")}</p>}</section><section className="rounded-3xl border border-[#e7dccb] bg-white p-6"><Icon name="gift" /><h2 className="mt-4 text-xl font-bold">ใช้แต้มเป็นส่วนลด</h2><p className="mt-2 leading-relaxed text-[#756f63]">สะสมครบ 100 แต้ม แลกรับส่วนลด 50 บาทในขั้นตอนสั่งซื้อ โดยหัก 100 แต้มต่อการแลก 1 ครั้ง</p></section></div><div className="mt-6 text-center"><Button onClick={onShop}>เลือกไอศกรีมเพื่อรับแต้ม</Button></div>
   </main>
 }
 
@@ -1859,7 +1857,10 @@ function CartDrawer({
             variant="icon"
             onClick={close}
           >
-            <Icon name="close" />
+            <Icon
+              name="close"
+              className="h-6 w-6 shrink-0 text-[#30382c]"
+            />
           </Button>
         </div>
         <div className="mt-6 flex-1 space-y-4 overflow-auto">
@@ -2127,7 +2128,10 @@ function Modal({ children, close }: { children: ReactNode; close: () => void }) 
           variant="icon"
           onClick={close}
         >
-          <Icon name="close" />
+          <Icon
+            name="close"
+            className="h-6 w-6 shrink-0 text-[#30382c]"
+          />
         </Button>
         {children}
       </section>
