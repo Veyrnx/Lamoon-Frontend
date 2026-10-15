@@ -301,7 +301,7 @@ function App() {
   const [activeView, setActiveView] =
     useState<"shop" | "tracking" | "rewards" | "settings">("shop")
   const [search, setSearch] = useState("")
-  const [tubOrder, setTubOrder] = useState<TubOrder | null>(null)
+  const [tubOrders, setTubOrders] = useState<TubOrder[]>([])
   const [selectedPromo, setSelectedPromo] = useState<string | null>(null)
 
   useEffect(() => {
@@ -381,18 +381,22 @@ function App() {
   }, [products, catalogStatus])
 
   const cupCount = Object.values(cart).reduce((sum, qty) => sum + qty, 0)
-  const itemCount = cupCount + (tubOrder?.quantity ?? 0)
+  const itemCount =
+    cupCount +
+    tubOrders.reduce((sum, item) => sum + item.quantity, 0)
   const cupSubtotal = Object.entries(cart).reduce((sum, [id, qty]) => {
     const product = products.find((item) => item.id === Number(id))
     return sum + (product?.price ?? 0) * qty
   }, 0)
-  const tubExtras =
-    tubOrder?.addOns.reduce(
+  const tubSubtotal = tubOrders.reduce((total, order) => {
+    const extras = order.addOns.reduce(
       (sum, name) =>
         sum + (tubAddOns.find((item) => item.name === name)?.price ?? 0),
-      0,
-    ) ?? 0
-  const tubSubtotal = tubOrder ? (1000 + tubExtras) * tubOrder.quantity : 0
+      0
+    )
+
+    return total + (1000 + extras) * order.quantity
+  }, 0)
   const subtotal = cupSubtotal + tubSubtotal
   const promo =
     festivals.find((festival) => festival.code === selectedPromo) ?? null
@@ -404,6 +408,33 @@ function App() {
       ),
     [products, search],
   )
+
+  function addTubOrder(newOrder: TubOrder) {
+    setTubOrders((current) => {
+      const index = current.findIndex(
+        (item) =>
+          item.flavor === newOrder.flavor &&
+          item.deliveryDate === newOrder.deliveryDate &&
+          item.deliveryTime === newOrder.deliveryTime &&
+          JSON.stringify([...item.addOns].sort()) ===
+          JSON.stringify([...newOrder.addOns].sort())
+      )
+
+      if (index === -1) {
+        return [...current, newOrder]
+      }
+
+      return current.map((item, i) =>
+        i === index
+          ? {
+            ...item,
+            quantity: item.quantity + newOrder.quantity,
+          }
+          : item
+      )
+    })
+  }
+
 
   function addToCart(id: number) {
     const product = products.find((p) => p.id === id)
@@ -572,8 +603,8 @@ function App() {
           />
           <TubSection
             products={products}
-            addOrder={setTubOrder}
-            currentOrder={tubOrder}
+            addOrder={addTubOrder}
+            currentOrder={tubOrders[0] ?? null}
             openCart={() => setCartOpen(true)}
           />
 
@@ -791,15 +822,19 @@ function App() {
           promo={promo}
           selectedPromo={selectedPromo}
           selectPromo={togglePromo}
-          tubOrder={tubOrder}
+          tubOrders={tubOrders}
           changeQuantity={changeQuantity}
-          changeTubQuantity={(delta) =>
-            setTubOrder((current) =>
-              current && current.quantity + delta > 0
-                ? { ...current, quantity: current.quantity + delta }
-                : null,
+          changeTubQuantity={(index, delta) => {
+            setTubOrders((current) =>
+              current
+                .map((item, i) =>
+                  i === index
+                    ? { ...item, quantity: item.quantity + delta }
+                    : item
+                )
+                .filter((item) => item.quantity > 0)
             )
-          }
+          }}
           checkout={() => {
             setCartOpen(false)
             setOrderPlaced(false)
@@ -827,7 +862,7 @@ function App() {
       )}
       {checkoutOpen && (
         <OrderCheckoutModal
-          initialDeliveryDate={tubOrder?.deliveryDate ?? ""}
+          initialDeliveryDate={tubOrders[0]?.deliveryDate ?? ""}
           close={() => setCheckoutOpen(false)}
           discount={discount}
           done={orderPlaced}
@@ -863,18 +898,33 @@ function App() {
                 ? { product_id: product.supabaseId, quantity }
                 : null
             }).filter((item): item is { product_id: string; quantity: number } => item !== null)
-            if ((!items.length && !tubOrder) || items.length !== Object.keys(cart).length) {
+            if (
+              (items.length === 0 && tubOrders.length === 0) ||
+              items.length !== Object.keys(cart).length
+            ) {
               window.alert("มีสินค้าในตะกร้าที่ยังไม่ได้เชื่อมกับ Supabase กรุณารีเฟรชหน้าแล้วเลือกสินค้าที่โหลดจากฐานข้อมูลใหม่")
+              return
+            }
+            if (
+              tubOrders.some(
+                (order) =>
+                  order.deliveryDate !== deliveryDate ||
+                  order.deliveryTime !== tubOrders[0]?.deliveryTime
+              )
+            ) {
+              window.alert(
+                "ไอศกรีมแบบถังในออเดอร์เดียวกันต้องมีวันและเวลาจัดส่งตรงกัน กรุณาแยกออเดอร์หากต้องการจัดส่งต่างเวลา"
+              )
               return
             }
             const { data: orderId, error } = await supabase.rpc("place_order", {
               p_items: items,
-              p_tub: tubOrder ? {
-                flavor: tubOrder.flavor,
-                quantity: tubOrder.quantity,
-                add_ons: tubOrder.addOns,
-              } : null,
-              p_delivery_date: `${deliveryDate}T${tubOrder?.deliveryTime ?? "12:00"}:00+07:00`,
+              p_tub: tubOrders.map((order) => ({
+                flavor: order.flavor,
+                quantity: order.quantity,
+                add_ons: order.addOns,
+              })),
+              p_delivery_date: `${deliveryDate}T${tubOrders[0]?.deliveryTime ?? "12:00"}:00+07:00`,
               p_delivery_type: "in_town",
               p_delivery_address: customerProfile.address.trim(),
               p_promotion_code: discount > 0 ? (promo?.code ?? null) : null,
@@ -893,7 +943,7 @@ function App() {
             setPlacedOrderNumber(savedOrder?.order_number ?? String(orderId))
             setOrderPlaced(true)
             setCart({})
-            setTubOrder(null)
+            setTubOrders([])
           }}
           promo={promo}
           subtotal={subtotal}
@@ -1367,7 +1417,7 @@ function OrderCartDrawer({
   promo,
   selectedPromo,
   selectPromo,
-  tubOrder,
+  tubOrders,
   changeQuantity,
   changeTubQuantity,
   checkout,
@@ -1380,19 +1430,13 @@ function OrderCartDrawer({
   promo: Festival | null
   selectedPromo: string | null
   selectPromo: (code: string) => void
-  tubOrder: TubOrder | null
+  tubOrders: TubOrder[]
   changeQuantity: (id: number, delta: number) => void
-  changeTubQuantity: (delta: number) => void
+  changeTubQuantity: (index: number, delta: number) => void
   checkout: () => void
 }) {
   const rows = products.filter((product) => cart[product.id])
-  const hasItems = rows.length > 0 || Boolean(tubOrder)
-  const tubExtras =
-    tubOrder?.addOns.reduce(
-      (sum, name) =>
-        sum + (tubAddOns.find((item) => item.name === name)?.price ?? 0),
-      0,
-    ) ?? 0
+  const hasItems = rows.length > 0 || tubOrders.length > 0
 
   return (
     <div className="fixed inset-0 z-50 bg-[#252b22]/40" onMouseDown={close}>
@@ -1404,7 +1448,7 @@ function OrderCartDrawer({
           <div>
             <h2 className="text-2xl font-bold">ตะกร้าของคุณ</h2>
             <p className="text-sm text-[#7c756a]">
-              {rows.length + (tubOrder ? 1 : 0)} รายการ
+              {rows.length + tubOrders.length} รายการ
             </p>
           </div>
           <Button
@@ -1460,40 +1504,56 @@ function OrderCartDrawer({
               </div>
             </div>
           ))}
-          {tubOrder && (
-            <div className="rounded-2xl border border-[#d5dfcc] bg-[#f0f4ec] p-4">
-              <div className="flex items-start gap-3">
-                <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-[#536348] text-white">
-                  <Icon name="box" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex justify-between gap-2">
-                    <strong>ไอศกรีมแบบถัง</strong>
-                    <strong>
-                      ฿
-                      {(
-                        (1000 + tubExtras) *
-                        tubOrder.quantity
-                      ).toLocaleString()}
-                    </strong>
-                  </div>
-                  <p className="text-sm text-[#65705e]">
-                    รส{tubOrder.flavor} · ของแถมมาตรฐานครบชุด
-                  </p>
-                  {tubOrder.addOns.length > 0 && (
-                    <p className="mt-1 text-xs text-[#7c756a]">
-                      ซื้อเพิ่ม: {tubOrder.addOns.join(", ")}
+          {tubOrders.map((tubOrder, index) => {
+            const extras = tubOrder.addOns.reduce(
+              (sum, name) =>
+                sum +
+                (tubAddOns.find((item) => item.name === name)?.price ?? 0),
+              0
+            )
+
+            return (
+              <div
+                key={index}
+                className="rounded-2xl border border-[#d5dfcc] bg-[#f0f4ec] p-4"
+              >
+                <div className="flex items-start gap-3">
+                  <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-[#536348] text-white">
+                    <Icon name="box" />
+                  </span>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex justify-between gap-2">
+                      <strong>ไอศกรีมแบบถัง</strong>
+                      <strong>
+                        ฿{((1000 + extras) * tubOrder.quantity).toLocaleString()}
+                      </strong>
+                    </div>
+
+                    <p className="text-sm text-[#65705e]">
+                      รส{tubOrder.flavor} · ของแถมมาตรฐานครบชุด
                     </p>
-                  )}
-                  <QuantityControl
-                    quantity={tubOrder.quantity}
-                    decrease={() => changeTubQuantity(-1)}
-                    increase={() => changeTubQuantity(1)}
-                  />
+
+                    {tubOrder.addOns.length > 0 && (
+                      <p className="mt-1 text-xs text-[#7c756a]">
+                        ซื้อเพิ่ม: {tubOrder.addOns.join(", ")}
+                      </p>
+                    )}
+
+                    <p className="mt-1 text-xs text-[#7c756a]">
+                      จัดส่งวันที่ {tubOrder.deliveryDate} เวลา {tubOrder.deliveryTime}
+                    </p>
+
+                    <QuantityControl
+                      quantity={tubOrder.quantity}
+                      decrease={() => changeTubQuantity(index, -1)}
+                      increase={() => changeTubQuantity(index, 1)}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )
+          })}
           {hasItems && (
             <div className="rounded-2xl border border-[#e4d7c4] bg-white p-4">
               <div className="flex items-center gap-2 font-bold">
