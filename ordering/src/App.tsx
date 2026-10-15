@@ -1524,9 +1524,9 @@ function OrderCartDrawer({
                   <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-[#536348] text-white">
                     {tubImage ? (
                       <img
-                        src={tubImage}
-                        alt={`ไอศกรีมรส${tubOrder.flavor}`}
-                        className="size-10 shrink-0 rounded-xl object-cover"
+                        src="https://images.unsplash.com/photo-1567206563064-6f60f40a2b57?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwyfHxob21lbWFkZSUyMGljZSUyMGNyZWFtJTIwcGFydHklMjBjYXRlcmluZ3xlbnwxfHx8fDE3OTE1NTM2NDN8MA&ixlib=rb-4.1.0&q=80&w=1080"
+                        alt={`ไอศกรีมแบบถัง รส${tubOrder.flavor}`}
+                        className="size-14 shrink-0 rounded-xl object-cover"
                       />
                     ) : (
                       <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#536348] text-white">
