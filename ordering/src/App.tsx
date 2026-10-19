@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react"
 import type { User } from "@supabase/supabase-js"
-import { supabase } from "./lib/supabase"
+import { supabase } from "./lib/supabase";
 
 type IconName = "bag" | "box" | "calendar" | "check" | "chevron" | "clock" | "close" | "gift" | "heart" | "home" | "leaf" | "location" | "mail" | "minus" | "phone" | "plus" | "search" | "settings" | "star" | "truck" | "user"
 
@@ -304,7 +304,43 @@ function App() {
   const [search, setSearch] = useState("")
   const [tubOrders, setTubOrders] = useState<TubOrder[]>([])
   const [selectedPromo, setSelectedPromo] = useState<string | null>(null)
+  const [activeFestivals, setActiveFestivals] = useState<Festival[]>([])
+  useEffect(() => {
+    async function loadActivePromotions() {
+      if (!supabase) {
+        console.error("ยังไม่ได้เชื่อมต่อ Supabase")
+        return
+      }
+      const { data, error } = await supabase
+        .from("promotions")
+        .select("code, name, description, minimum_order_amount, value")
+        .eq("is_active", true)
+        .eq("promotion_type", "fixed")
+        .order("name")
 
+      if (error) {
+        console.error("โหลดโปรโมชั่นไม่สำเร็จ:", error.message)
+        return
+      }
+
+      const promotions: Festival[] = (data ?? []).map((item, index) => ({
+        code: item.code,
+        name: item.name,
+        detail: item.description ?? "",
+        minimum: Number(item.minimum_order_amount ?? 0),
+        discount: Number(item.value ?? 0),
+        theme: [
+          "bg-[#e3eadc]",
+          "bg-[#dce9e5]",
+          "bg-[#f3e1cf]",
+        ][index % 3],
+      }))
+
+      setActiveFestivals(promotions)
+    }
+
+    void loadActivePromotions()
+  }, [])
   useEffect(() => {
     if (!supabase) return
     let alive = true
@@ -399,8 +435,7 @@ function App() {
     return total + (1000 + extras) * order.quantity
   }, 0)
   const subtotal = cupSubtotal + tubSubtotal
-  const promo =
-    festivals.find((festival) => festival.code === selectedPromo) ?? null
+  const promo = activeFestivals.find((festival) => festival.code === selectedPromo) ?? null
   const discount = promo && subtotal >= promo.minimum ? promo.discount : 0
   const filtered = useMemo(
     () =>
@@ -443,11 +478,11 @@ function App() {
     setCart((current) => ({ ...current, [id]: Math.min(product.stock!, (current[id] ?? 0) + 1) }))
   }
   useEffect(() => {
-  if (!user || pendingCartProductId === null) return
+    if (!user || pendingCartProductId === null) return
 
-  addToCart(pendingCartProductId)
-  setPendingCartProductId(null)
-}, [user, pendingCartProductId])
+    addToCart(pendingCartProductId)
+    setPendingCartProductId(null)
+  }, [user, pendingCartProductId])
 
   function changeQuantity(id: number, delta: number) {
     setCart((current) => {
@@ -606,9 +641,10 @@ function App() {
             </div>
           </section>
 
-          <FestivalSection
+          <FestivalsSection
             selectedPromo={selectedPromo}
             selectPromo={togglePromo}
+            activeFestivals={activeFestivals}
           />
           <TubSection
             products={products}
@@ -973,12 +1009,14 @@ function App() {
   )
 }
 
-function FestivalSection({
+function FestivalsSection({
   selectedPromo,
   selectPromo,
+  activeFestivals,
 }: {
   selectedPromo: string | null
   selectPromo: (code: string) => void
+  activeFestivals: Festival[]
 }) {
   return (
     <section className="mx-auto max-w-7xl px-4 pt-16 sm:px-6 lg:px-8">
@@ -990,7 +1028,7 @@ function FestivalSection({
         </p>
       </div>
       <div className="grid gap-5 md:grid-cols-3">
-        {festivals.map((festival) => {
+        {activeFestivals.map((festival) => {
           const selected = selectedPromo === festival.code
           return (
             <article
