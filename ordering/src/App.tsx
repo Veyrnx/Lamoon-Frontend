@@ -292,6 +292,7 @@ function App() {
   const [catalogStatus, setCatalogStatus] = useState<"loading" | "connected" | "error" | "not-configured">("loading")
   const [catalogMessage, setCatalogMessage] = useState("")
   const [cart, setCart] = useState<Record<number, number>>({})
+  const [pendingCartProductId, setPendingCartProductId] = useState<number | null>(null)
   const [cartOpen, setCartOpen] = useState(false)
   const [loginOpen, setLoginOpen] = useState(false)
   const [checkoutOpen, setCheckoutOpen] = useState(false)
@@ -441,6 +442,12 @@ function App() {
     if (!product || product.stock === undefined || product.stock <= 0) return
     setCart((current) => ({ ...current, [id]: Math.min(product.stock!, (current[id] ?? 0) + 1) }))
   }
+  useEffect(() => {
+  if (!user || pendingCartProductId === null) return
+
+  addToCart(pendingCartProductId)
+  setPendingCartProductId(null)
+}, [user, pendingCartProductId])
 
   function changeQuantity(id: number, delta: number) {
     setCart((current) => {
@@ -504,15 +511,17 @@ function App() {
               <Icon name="user" />
               {user ? "ออกจากระบบ" : "เข้าสู่ระบบ"}
             </Button>
-            <Button
-              ariaLabel="บัญชีและการตั้งค่า"
-              className="hidden sm:inline-flex"
-              variant="ghost"
-              onClick={() => goTo("settings")}
-            >
-              <Icon name="settings" />
-              บัญชี
-            </Button>
+            {user && (
+              <Button
+                ariaLabel="บัญชีและการตั้งค่า"
+                className="hidden sm:inline-flex"
+                variant="ghost"
+                onClick={() => goTo("settings")}
+              >
+                <Icon name="settings" />
+                บัญชี
+              </Button>
+            )}
             <Button
               ariaLabel={`ตะกร้าสินค้า ${itemCount} ชิ้น`}
               className="relative px-4"
@@ -575,7 +584,7 @@ function App() {
               </div>
               <div className="relative min-h-72 lg:min-h-full">
                 <img
-                  alt="ไอศกรีมหลากรสในถ้วย พร้อมเสิร์ฟ"
+                  alt="ไอศกรีมหลากรสในกล่อง พร้อมเสิร์ฟ"
                   className="absolute inset-0 size-full object-cover"
                   src="https://images.unsplash.com/photo-1629385744299-74b9cf013f52?auto=format&fit=crop&w=1400&q=90"
                 />
@@ -703,11 +712,19 @@ function App() {
                     <div className="mt-4 flex items-center justify-between gap-3">
                       <span className={`flex items-center gap-1.5 text-sm font-semibold ${product.stock === undefined || product.stock <= 7 ? "text-[#a6533c]" : "text-[#607054]"}`}>
                         <span className={`size-2 rounded-full ${product.stock === undefined || product.stock <= 7 ? "bg-[#c86f53]" : "bg-[#718163]"}`} />
-                        {product.stock === undefined || product.stock <= 0 ? "ไม่พร้อมจำหน่าย" : `พร้อมจำหน่าย · เหลือ ${product.stock} ถ้วย`}
+                        {product.stock === undefined || product.stock <= 0 ? "ไม่พร้อมจำหน่าย" : `พร้อมจำหน่าย · เหลือ ${product.stock} กล่อง`}
                       </span>
                       <Button
                         className="min-h-10 px-4 text-sm"
-                        onClick={() => addToCart(product.id)}
+                        onClick={() => {
+                          if (!user) {
+                            setPendingCartProductId(product.id);
+                            setLoginOpen(true);
+                            return;
+                          }
+
+                          addToCart(product.id);
+                        }}
                         disabled={product.stock === undefined || product.stock <= 0}
                         ariaLabel={product.stock === undefined || product.stock <= 0 ? `${product.name} ไม่พร้อมจำหน่าย` : `เพิ่ม${product.name}`}
                       >
@@ -1495,7 +1512,7 @@ function OrderCartDrawer({
                   <strong>{product.name}</strong>
                   <strong>฿{product.price * cart[product.id]}</strong>
                 </div>
-                <span className="text-sm text-[#7c756a]">ถ้วย 250 มล.</span>
+                <span className="text-sm text-[#7c756a]">กล่อง 250 มล.</span>
                 <QuantityControl
                   quantity={cart[product.id]}
                   decrease={() => changeQuantity(product.id, -1)}
@@ -1968,7 +1985,7 @@ function CartDrawer({
                     <strong>{product.name}</strong>
                     <strong>฿{product.price * cart[product.id]}</strong>
                   </div>
-                  <span className="text-sm text-[#7c756a]">ถ้วย 250 มล.</span>
+                  <span className="text-sm text-[#7c756a]">กล่อง 250 มล.</span>
                   <div className="mt-2 flex w-fit items-center rounded-full border border-[#ded3c3]">
                     <button
                       aria-label="ลดจำนวน"
