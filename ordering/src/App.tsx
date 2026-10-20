@@ -293,6 +293,7 @@ function App() {
   const [catalogMessage, setCatalogMessage] = useState("")
   const [cart, setCart] = useState<Record<number, number>>({})
   const [pendingCartProductId, setPendingCartProductId] = useState<number | null>(null)
+  const [pendingTubOrder, setPendingTubOrder] = useState<TubOrder | null>(null)
   const [cartOpen, setCartOpen] = useState(false)
   const [loginOpen, setLoginOpen] = useState(false)
   const [checkoutOpen, setCheckoutOpen] = useState(false)
@@ -483,6 +484,12 @@ function App() {
     addToCart(pendingCartProductId)
     setPendingCartProductId(null)
   }, [user, pendingCartProductId])
+  useEffect(() => {
+  if (!user || !pendingTubOrder) return
+
+  addTubOrder(pendingTubOrder)
+  setPendingTubOrder(null)
+}, [user, pendingTubOrder])
 
   function changeQuantity(id: number, delta: number) {
     setCart((current) => {
@@ -648,7 +655,15 @@ function App() {
           />
           <TubSection
             products={products}
-            addOrder={addTubOrder}
+            addOrder={(order) => {
+              if (!user) {
+                setPendingTubOrder(order)
+                setLoginOpen(true)
+                return
+              }
+
+              addTubOrder(order)
+            }}
             currentOrder={tubOrders[0] ?? null}
             openCart={() => setCartOpen(true)}
           />
