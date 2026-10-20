@@ -871,6 +871,7 @@ function App() {
           cart={cart}
           close={() => setCartOpen(false)}
           subtotal={subtotal}
+          activeFestivals={activeFestivals}
           discount={discount}
           promo={promo}
           selectedPromo={selectedPromo}
@@ -1476,6 +1477,7 @@ function OrderCartDrawer({
   changeQuantity,
   changeTubQuantity,
   checkout,
+  activeFestivals,
 }: {
   products: Product[]
   cart: Record<number, number>
@@ -1489,6 +1491,7 @@ function OrderCartDrawer({
   changeQuantity: (id: number, delta: number) => void
   changeTubQuantity: (index: number, delta: number) => void
   checkout: () => void
+  activeFestivals: Festival[]
 }) {
   const rows = products.filter((product) => cart[product.id])
   const hasItems = rows.length > 0 || tubOrders.length > 0
@@ -1629,7 +1632,7 @@ function OrderCartDrawer({
                 ส่วนลดเทศกาล
               </div>
               <div className="mt-3 grid gap-2">
-                {festivals.map((festival) => (
+                {activeFestivals.map((festival) => (
                   <button
                     className={`flex items-center justify-between rounded-xl border p-3 text-left ${selectedPromo === festival.code
                       ? "border-[#536348] bg-[#eef2e9]"
@@ -1959,6 +1962,7 @@ function CartDrawer({
   subtotal,
   changeQuantity,
   checkout,
+  activeFestivals,
 }: {
   products: Product[]
   cart: Record<number, number>
@@ -1966,6 +1970,7 @@ function CartDrawer({
   subtotal: number
   changeQuantity: (id: number, delta: number) => void
   checkout: () => void
+  activeFestivals: Festival[]
 }) {
   const rows = products.filter((product) => cart[product.id])
   return (
